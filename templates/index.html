@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+        integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+    <!-- JQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"
+        integrity="sha512-pumBsjNRGGqkPzKHndZMaAG+bir374sORyzM3uulLV14lN5LyykqNk8eEeUlUkB3U0M4FApyaHraT65ihJhDpQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <!-- Mapbox -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.9.1/mapbox-gl.css' rel='stylesheet' />
+
+    <title>Document</title>
+
+    <style>
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .cus-menu-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid lightgray;
+        }
+
+        .cus-btn-add {
+            position: absolute;
+            z-index: 1;
+            bottom: 32px;
+            right: 32px;
+        }
+
+        .cus-input-form {
+            width: 35vw;
+            display: none;
+            position: absolute;
+            z-index: 1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #cus-info-container{
+            display: none;
+            position: absolute;
+            z-index: 1;
+            top: 32px;
+            left: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map">
+        <button class="btn cus-menu-container cus-btn-add" id="cus-add" onclick="toggleCusMenu()">
+            Add Place
+        </button>
+    </div>
+    <div id="cus-info-container">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="cus-menu-container cus-info">
+                    <h1>Hello</h1>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="cus-menu-container cus-info">
+                    <h1>Hello</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="cus-menu-container cus-input-form p-4" id="cus-input-form">
+        <div class="row">
+            <div class="col-md 6">
+                <h1 class="mb-3">Add Place</h1>
+                <div class="form-group">
+                    <label for="place_name">Place Name</label>
+                    <input type="text" class="form-control" id="place_name" placeholder="Example: Toko Ujang">
+                </div>
+                <div class="form-group">
+                    <label for="city_location">City Location</label>
+                    <input type="text" class="form-control" id="city_location" placeholder="Example: Pekanbaru">
+                </div>
+                <div class="form-group">
+                    <label for="place_categories">Place Categories (separate by coma)</label>
+                    <input type="text" class="form-control" id="place_categories"
+                        placeholder="Example: Food, Traditional">
+                </div>
+                <div class="row">
+                    <div class="col-md 6">
+                        <div class="form-group">
+                            <label for="longitude">Longitude</label>
+                            <input type="text" class="form-control" id="longitude" placeholder="Example: 101.438309">
+                        </div>
+                    </div>
+                    <div class="col-md 6">
+                        <div class="form-group">
+                            <label for="latitude">Latitude</label>
+                            <input type="text" class="form-control" id="latitude" placeholder="Example: 0.510440">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md 6">
+                        <button class="btn btn-outline-secondary w-100" onclick="toggleCusMenu()">Cancel</button>
+                    </div>
+                    <div class="col-md 6">
+                        <button class="btn btn-primary w-100" onclick="savePlace()">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map = null
+        let isMenuVisible = false
+        let countSavedPlace = 0
+        let activeMarker = null
+        let activePopup = null
+
+        let toggleCusMenu = () => {
+            $('#place_name').val("")
+            $('#city_location').val("")
+            $('#place_categories').val("")
+            $('#longitude').val("")
+            $('#latitude').val("")
+
+            if (!isMenuVisible) {
+                $('.cus-input-form').css('display', 'block')
+                $('#cus-add').css('display', 'none')
+                isMenuVisible = true
+            } else {
+                $('.cus-input-form').css('display', 'none')
+                $('#cus-add').css('display', 'block')
+                isMenuVisible = false
+            }
+        }
+
+        let getPlaces = () => {
+            $.get('/places', response => {
+                countSavedPlace = response.places.length
+                response.places.forEach((place, index) => {
+                    createMarker(place, true)
+                })
+            })
+        }
+
+        let savePlace = () => {
+            $.post('/save_place' ,{
+                place_name : $('#place_name').val(),
+                city_location : $('#city_location').val(),
+                place_categories : $('#place_categories').val(),
+                longitude : $('#longitude').val(),
+                latitude : $('#latitude').val()
+            }, data => {
+                if(data.isSuccess){
+                    toggleCusMenu()
+                    alert("Insert Success")
+                    window.location = '/'
+                }
+            })
+        }
+
+        let createMarker = (place, isFromDB) => {
+            let marker = new mapboxgl.Marker()
+                            .setLngLat([place.longitude, place.latitude])
+                            .addTo(map)
+                           
+            if(isFromDB){
+                marker.getElement().addEventListener('click', function(event){
+                    event.stopPropagation()
+                    $('#cus-info-container').css('display', 'inline-block')
+                    console.log(place)
+                })
+            }
+        }
+
+        let cancelActiveMapPopUp = (obj) => {
+            activeMarker.remove()
+            activePopup.remove()
+        }
+
+        $(document).ready(function () {
+            mapboxgl.accessToken = 'pk.eyJ1IjoibGlsd3J6bWFuIiwiYSI6ImNsZmd6eGN0czAwM3kzcHIweWxnazdidTgifQ.3zuzm6Cx74mVBpVNAFr2Uw'
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v12',
+                center: [101.438309, 0.510440],
+                zoom: 14
+            })
+
+            map.on('click', (e) => {
+                let coord = e.lngLat
+
+                activePopup = new mapboxgl.Popup({
+                    offset : {
+                        bottom : [0, -35]
+                    },
+                    closeButton : false
+                }).setLngLat([coord.lng, coord.lat])
+                .setHTML(`<div class="cus-menu-container">
+                                <button class='btn w-100 mb-2' 
+                                    onclick="toggleCusMenu(); 
+                                    $('#longitude').val(${coord.lng});
+                                    $('#latitude').val(${coord.lat});">Add Place Here</button>
+                                <button class='btn btn-outline-danger w-100' onclick="cancelActiveMapPopUp()">Cancel</button>
+                        </div>`).addTo(map)
+
+                createMarker({longitude:coord.lng, latitude:coord.lat}, false)
+
+                let countDisplayedMarker = $('.mapboxgl-marker').length
+                activeMarker = $('.mapboxgl-marker').eq(countDisplayedMarker - 1)
+                if(countDisplayedMarker - 1 > countSavedPlace){
+                    $('.mapboxgl-marker').eq(countDisplayedMarker - 2).remove()
+                }
+            })
+
+            getPlaces()
+        })
+    </script>
+</body>
+
+</html>
